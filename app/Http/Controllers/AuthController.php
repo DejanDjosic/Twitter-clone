@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 
 class AuthController extends Controller
 {
+
+
+
     public function register()
     {
         return view('auth.register');
@@ -22,7 +26,7 @@ class AuthController extends Controller
                 'password' => 'required|confirmed|min:8'
             ]
         );
-         User::create(
+        User::create(
             [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -30,5 +34,27 @@ class AuthController extends Controller
             ]
         );
         return redirect()->route('dashboard')->with('success', 'Account created succesfully!');
+    }
+
+    public function login()
+    {
+        return view('auth.login');
+    }
+    public function authenticate()
+    {
+        $validated = request()->validate(
+            [
+                'email' => 'required|email',
+                'password' => 'required|min:8'
+            ]
+        );
+        if (auth()->attempt($validated)) {
+            request()->session()->regenerate();
+            return redirect()->route('dashboard')->with('success', 'Account logged in succesfully!');
+        } else {
+            return redirect()->route('login')->withErrors([
+                'email' => 'No matching user found with the provided email and password'
+            ]);
+        }
     }
 }
